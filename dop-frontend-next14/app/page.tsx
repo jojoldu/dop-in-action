@@ -1,5 +1,4 @@
-import Image from "next/image";
-import mixpanel from "@/app/utils/mixpanel";
+import { mixpanel } from "@/app/utils/mixpanel";
 
 export default function Home() {
   mixpanel.track("Page Viewed", { page: "Home" });
