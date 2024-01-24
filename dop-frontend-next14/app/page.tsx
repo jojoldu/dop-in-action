@@ -1,15 +1,30 @@
+'use client';
+
 import { mixpanel } from "@/app/utils/mixpanel";
+import { Product } from "@/app/cart/Product";
+import AddToCartButton from "@/app/cart/components/AddToCartButton";
 
 export default function Home() {
-  mixpanel.track("Page Viewed", { page: "Home" });
+  mixpanel.track("Home Page View", { page: "Home" });
+
+  // 상품 목록 예시 데이터
+  const products: Product[] = [
+    { id: '1', name: 'Product 1', price: 10 },
+    { id: '2', name: 'Product 2', price: 20 },
+    { id: '3', name: 'Product 3', price: 30 }
+  ];
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-        </p>
-      </div>
-    </main>
+    <div>
+      <h1>상품 목록</h1>
+      <ul>
+        {products.map(product => (
+          <li key={product.id}>
+            상품명: {product.name} | 가격: ${product.price} |
+            <AddToCartButton product={product} />
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

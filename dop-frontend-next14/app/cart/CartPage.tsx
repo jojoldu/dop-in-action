@@ -1,4 +1,4 @@
-import { Product } from "@/app/product/Product";
+import { Product } from "@/app/cart/Product";
 import { useState } from "react";
 import { mixpanel } from "@/app/utils/mixpanel";
 
