@@ -1,5 +1,5 @@
 'use client';
-
+import "reflect-metadata";
 import { mixpanel } from "@/app/utils/mixpanel";
 import { Product } from "@/app/cart/Product";
 import AddToCartButton from "@/app/cart/components/AddToCartButton";
