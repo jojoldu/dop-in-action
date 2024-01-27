@@ -1,10 +1,30 @@
-export class InstrumentingShoppingCart implements IShoppingCart {
-  private readonly IShoppingCart;
-  component;
-  private readonly DiscountInstrumentation;
-  instrumentation;
+interface IShoppingCart {
+  applyDiscountCode(discountCode: number): number;
+}
 
-  constructor(component, instrumentation) {
+class DiscountInstrumentation {
+  applyingDiscountCode(discountCode: number) {
+
+  }
+
+  discountCodeLookupSucceeded(discountCode: number) {
+
+  }
+
+  discountApplied(discountAmount: number) {
+
+  }
+
+  discountCodeLookupFailed(discountCode: number, error: unknown) {
+
+  }
+}
+
+export class InstrumentingShoppingCart implements IShoppingCart {
+  private readonly component: IShoppingCart;
+  private readonly instrumentation: DiscountInstrumentation;
+
+  constructor(component: IShoppingCart, instrumentation: DiscountInstrumentation) {
     this.component = component;
     this.instrumentation = instrumentation;
   }
@@ -12,7 +32,7 @@ export class InstrumentingShoppingCart implements IShoppingCart {
   applyDiscountCode(discountCode: number): number {
     this.instrumentation.applyingDiscountCode(discountCode);
     try {
-      var discountAmount = component.applyDiscountCode(discountCode);
+      const discountAmount = this.component.applyDiscountCode(discountCode);
       this.instrumentation.discountCodeLookupSucceeded(discountCode);
       this.instrumentation.discountApplied(discountAmount);
       return discountAmount;
