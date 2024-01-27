@@ -1,6 +1,7 @@
 import { Product } from "@/app/cart/Product";
 import { useState } from "react";
-import { mixpanel } from "@/app/utils/mixpanel";
+import { mixpanel } from "@/app/utils/Mixpanel";
+import { gtmAnalytics } from "@/app/utils/GtmAnalytics";
 
 export default function CartPage() {
   // 장바구니 상태
@@ -11,7 +12,9 @@ export default function CartPage() {
 
   const removeFromCart = (product: Product) => {
     setCart(cart.filter(p => p.id !== product.id));
-    mixpanel.track("Product Removed in Cart", {
+
+    gtmAnalytics.track("view_product_remove_cart");
+    mixpanel.track("product_removed_cart", {
       productId: product.id,
       name: product.name,
       price: product.price

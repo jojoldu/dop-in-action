@@ -1,7 +1,7 @@
 'use client';
 import React from 'react';
 import { Product } from "@/app/cart/Product";
-import { mixpanel } from "@/app/utils/mixpanel";
+import { mixpanel } from "@/app/utils/Mixpanel";
 
 interface AddToCartButtonProps {
   product: Product;

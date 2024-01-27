@@ -1,7 +1,7 @@
 import { injectable } from "tsyringe";
 import { Logger } from "@/app/utils/Logger";
 import { Product } from "@/app/cart/Product";
-import { mixpanel } from "@/app/utils/mixpanel";
+import { mixpanel } from "@/app/utils/Mixpanel";
 
 @injectable()
 export class ExampleService {
