@@ -16,7 +16,15 @@ export default function CartPage() {
   const removeFromCart = (product: Product) => {
     setCart(cart.filter(p => p.id !== product.id));
 
-    gtmAnalytics.track("click_product_remove_cart");
+    if(product.type === ProductType.FOOD) {
+      gtmAnalytics.track("click_remove_cart_food");
+    } else if(product.type === ProductType.BOOK) {
+      gtmAnalytics.track("click_remove_cart_book");
+    } else if(product.type === ProductType.CLOTHING) {
+      gtmAnalytics.track("click_remove_cart_clothing");
+    }
+
+
     mixpanel.track("product_removed_cart", {
       productId: product.id,
       name: product.name,
