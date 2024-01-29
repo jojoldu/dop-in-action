@@ -1,3 +1,6 @@
+import { singleton } from "tsyringe";
+
+@singleton()
 export class Mixpanel {
   track(
     event_name: string,

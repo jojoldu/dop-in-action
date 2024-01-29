@@ -1,5 +1,6 @@
 'use client';
 import "reflect-metadata";
+
 import { mixpanel } from "@/app/utils/Mixpanel";
 import { Product, ProductType } from "@/app/cart/Product";
 import Link from "next/link";

@@ -1,4 +1,6 @@
+import { singleton } from "tsyringe";
 
+@singleton()
 export class GtmAnalytics {
   track(
     event_name: string,

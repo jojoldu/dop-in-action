@@ -1,6 +1,6 @@
-import { injectable } from "tsyringe";
+import { injectable, singleton } from "tsyringe";
 
-@injectable()
+@singleton()
 export class Logger {
   info(message:string, e?: Error) {
     console.log(message, e);
@@ -10,3 +10,5 @@ export class Logger {
     console.error(message, e);
   }
 }
+
+export const logger = new Logger();
