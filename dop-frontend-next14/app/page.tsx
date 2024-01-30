@@ -1,17 +1,26 @@
 'use client';
-import "reflect-metadata";
 
+import "reflect-metadata";
 import { mixpanel } from "@/app/utils/Mixpanel";
 import { Product, ProductType } from "@/app/cart/Product";
 import Link from "next/link";
 import React from "react";
+import { hasProduct } from "@/app/utils/HttpClient";
 
 interface AddToCartButtonProps {
   product: Product;
 }
 
 function AddToCartButton({ product }: Readonly<AddToCartButtonProps>) {
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
+    if(await hasProduct(product.id)) {
+      mixpanel.track("product_duplicate_added_to_cart", {
+        productId: product.id,
+      });
+      alert(`${product.name}는 이미 담겨진 상품입니다.`);
+      return ;
+    }
+
     mixpanel.track("product_added_to_cart", {
       productId: product.id,
       name: product.name,
