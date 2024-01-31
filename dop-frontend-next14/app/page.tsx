@@ -2,7 +2,7 @@
 
 import "reflect-metadata";
 import { mixpanel } from "@/app/utils/Mixpanel";
-import { Product, ProductType } from "@/app/cart/Product";
+import { Product, ProductType } from "@/app/product/Product";
 import Link from "next/link";
 import React from "react";
 import { hasProduct } from "@/app/utils/HttpClient";
@@ -46,7 +46,8 @@ export default function Home() {
   return (
     <div>
       <h1>상품 목록</h1>
-      <Link href="/cart">장바구니 보기</Link>
+      <Link href="/cart">장바구니 보기</Link> <br/>
+      <Link href="/cart2">(리팩토링) 장바구니 보기</Link>
 
       <ul>
         {products.map(product => (

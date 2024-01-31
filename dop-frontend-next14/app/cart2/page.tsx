@@ -4,10 +4,11 @@ import "reflect-metadata";
 import { Product, ProductType } from "@/app/product/Product";
 import React, { useState } from "react";
 import Link from "next/link";
-import { gtmAnalytics } from "@/app/utils/GtmAnalytics";
-import mixpanel from "mixpanel-browser";
+import { container } from "tsyringe";
+import { CartProbe } from "@/app/cart2/probe/CartProbe";
 
 export default function CartPage() {
+  const probe = container.resolve(CartProbe);
 
   // 장바구니 상태
   const [cart, setCart] = useState<Product[]>([
@@ -18,20 +19,7 @@ export default function CartPage() {
   const removeFromCart = (product: Product) => {
     setCart(cart.filter(p => p.id !== product.id));
 
-    if(product.type === ProductType.FOOD) {
-      gtmAnalytics.track("click_remove_cart_food");
-    } else if(product.type === ProductType.BOOK) {
-      gtmAnalytics.track("click_remove_cart_book");
-    } else if(product.type === ProductType.CLOTHING) {
-      gtmAnalytics.track("click_remove_cart_clothing");
-    }
-
-    mixpanel.track("product_removed_cart", {
-      productId: product.id,
-      name: product.name,
-      price: product.price,
-      productType: product.type
-    });
+    probe.remove(product);
   };
 
   return (

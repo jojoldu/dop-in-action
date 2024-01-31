@@ -1,6 +1,6 @@
 import { singleton } from "tsyringe";
 import { Logger } from "@/app/utils/Logger";
-import { Product, ProductType } from "@/app/cart/Product";
+import { Product, ProductType } from "@/app/product/Product";
 import { Mixpanel } from "@/app/utils/Mixpanel";
 import { GtmAnalytics } from "@/app/utils/GtmAnalytics";
 
