@@ -6,6 +6,11 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { gtmAnalytics } from "@/app/utils/GtmAnalytics";
 import mixpanel from "mixpanel-browser";
+import { logger } from "@/app/utils/Logger";
+
+async function requestRemove(id: string) {
+
+}
 
 export default function CartPage() {
 
@@ -15,8 +20,16 @@ export default function CartPage() {
     Product.of('2', 'Product 2', 20, ProductType.FOOD),
   ]);
 
-  const removeFromCart = (product: Product) => {
-    setCart(cart.filter(p => p.id !== product.id));
+  const removeFromCart = async (product: Product) => {
+    try {
+      await requestRemove(product.id);
+      setCart(cart.filter(p => p.id !== product.id));
+    } catch (e) {
+      logger.error(`카트 상품 제거 실패 productId=${product.id}`);
+      mixpanel.track("product_removed_cart_failure", {
+        productId: product.id,
+      });
+    }
 
     if(product.type === ProductType.FOOD) {
       gtmAnalytics.track("click_remove_cart_food");
