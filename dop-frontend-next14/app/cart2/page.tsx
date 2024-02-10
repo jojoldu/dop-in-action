@@ -6,6 +6,8 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { gtmAnalytics } from "@/app/utils/GtmAnalytics";
 import mixpanel from "mixpanel-browser";
+import { requestRemove } from "@/app/utils/requestRemove";
+import { logger } from "@/app/utils/Logger";
 
 // 개발할때마다, 테스트코드를 수행할때마다 메트릭 지표를 보낼 것인가?
 // 메트릭이 의도한대로 전송된다는 것은 어떻게 검증할 것인가?
@@ -34,8 +36,16 @@ export default function CartPage() {
     Product.of('2', 'Product 2', 20, ProductType.FOOD),
   ]);
 
-  const removeFromCart = (product: Product) => {
-    setCart(cart.filter(p => p.id !== product.id));
+  const removeFromCart = async (product: Product) => {
+    try {
+      await requestRemove(product.id);
+      setCart(cart.filter(p => p.id !== product.id));
+    } catch (e) {
+      logger.error(`카트 상품 제거 실패 productId=${product.id}`);
+      mixpanel.track("product_removed_cart_failure", {
+        productId: product.id,
+      });
+    }
     sendRemoveMetric(product);
   };
 

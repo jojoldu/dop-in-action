@@ -7,10 +7,7 @@ import Link from "next/link";
 import { gtmAnalytics } from "@/app/utils/GtmAnalytics";
 import mixpanel from "mixpanel-browser";
 import { logger } from "@/app/utils/Logger";
-
-async function requestRemove(id: string) {
-
-}
+import { requestRemove } from "@/app/utils/requestRemove";
 
 export default function CartPage() {
 
