@@ -1,8 +1,9 @@
 import { singleton } from "tsyringe";
-import { Logger } from "@/app/utils/Logger";
+import { logger, Logger } from "@/app/utils/Logger";
 import { Product, ProductType } from "@/app/product/Product";
 import { Mixpanel } from "@/app/utils/Mixpanel";
 import { GtmAnalytics } from "@/app/utils/GtmAnalytics";
+import mixpanel from "mixpanel-browser";
 
 @singleton()
 export class CartProbe {
@@ -14,6 +15,12 @@ export class CartProbe {
     this.logger = logger;
     this.gtmAnalytics = gtmAnalytics;
     this.mixpanel = mixpanel;
+  }
+
+  public applyingRemove(product: Product) {
+    mixpanel.track("product_apply_remove_cart", {
+      productId: product.id
+    });
   }
 
   public remove(product: Product): void {
@@ -30,6 +37,13 @@ export class CartProbe {
       name: product.name,
       price: product.price,
       productType: product.type
+    });
+  }
+
+  public removeFailure(product: Product) {
+    logger.error(`카트 상품 제거 실패 productId=${product.id}`);
+    mixpanel.track("product_removed_cart_failure", {
+      productId: product.id
     });
   }
 }

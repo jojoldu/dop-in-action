@@ -6,6 +6,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { container } from "tsyringe";
 import { CartProbe } from "@/app/cart3/probe/CartProbe";
+import { requestRemove } from "@/app/utils/requestRemove";
 
 export default function CartPage3() {
   const probe = container.resolve(CartProbe);
@@ -16,10 +17,16 @@ export default function CartPage3() {
     Product.of('2', 'Product 2', 20, ProductType.FOOD),
   ]);
 
-  const removeFromCart = (product: Product) => {
-    setCart(cart.filter(p => p.id !== product.id));
+  const removeFromCart = async (product: Product) => {
+    probe.applyingRemove(product);
 
-    probe.remove(product);
+    try {
+      await requestRemove(product.id);
+      setCart(cart.filter(p => p.id !== product.id));
+      probe.remove(product);
+    } catch (e) {
+      probe.removeFailure(product);
+    }
   };
 
   return (

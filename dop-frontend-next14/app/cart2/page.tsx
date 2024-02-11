@@ -9,8 +9,12 @@ import mixpanel from "mixpanel-browser";
 import { requestRemove } from "@/app/utils/requestRemove";
 import { logger } from "@/app/utils/Logger";
 
-// 개발할때마다, 테스트코드를 수행할때마다 메트릭 지표를 보낼 것인가?
-// 메트릭이 의도한대로 전송된다는 것은 어떻게 검증할 것인가?
+function applyingRemove(product: Product) {
+  mixpanel.track("product_apply_remove_cart", {
+    productId: product.id
+  });
+}
+
 function sendRemoveMetric(product: Product) {
   if (product.type === ProductType.FOOD) {
     gtmAnalytics.track("click_remove_cart_food");
@@ -28,6 +32,13 @@ function sendRemoveMetric(product: Product) {
   });
 }
 
+function sendRemoveFailure(product: Product) {
+  logger.error(`카트 상품 제거 실패 productId=${product.id}`);
+  mixpanel.track("product_removed_cart_failure", {
+    productId: product.id
+  });
+}
+
 export default function CartPage() {
 
   // 장바구니 상태
@@ -37,16 +48,14 @@ export default function CartPage() {
   ]);
 
   const removeFromCart = async (product: Product) => {
+    applyingRemove(product);
     try {
       await requestRemove(product.id);
       setCart(cart.filter(p => p.id !== product.id));
+      sendRemoveMetric(product);
     } catch (e) {
-      logger.error(`카트 상품 제거 실패 productId=${product.id}`);
-      mixpanel.track("product_removed_cart_failure", {
-        productId: product.id,
-      });
+      sendRemoveFailure(product);
     }
-    sendRemoveMetric(product);
   };
 
   return (

@@ -18,30 +18,34 @@ export default function CartPage() {
   ]);
 
   const removeFromCart = async (product: Product) => {
+    mixpanel.track("product_apply_remove_cart", {
+      productId: product.id,
+    });
+
     try {
       await requestRemove(product.id);
       setCart(cart.filter(p => p.id !== product.id));
+
+      if(product.type === ProductType.FOOD) {
+        gtmAnalytics.track("click_remove_cart_food");
+      } else if(product.type === ProductType.BOOK) {
+        gtmAnalytics.track("click_remove_cart_book");
+      } else if(product.type === ProductType.CLOTHING) {
+        gtmAnalytics.track("click_remove_cart_clothing");
+      }
+
+      mixpanel.track("product_removed_cart", {
+        productId: product.id,
+        name: product.name,
+        price: product.price,
+        productType: product.type
+      });
     } catch (e) {
       logger.error(`카트 상품 제거 실패 productId=${product.id}`);
       mixpanel.track("product_removed_cart_failure", {
         productId: product.id,
       });
     }
-
-    if(product.type === ProductType.FOOD) {
-      gtmAnalytics.track("click_remove_cart_food");
-    } else if(product.type === ProductType.BOOK) {
-      gtmAnalytics.track("click_remove_cart_book");
-    } else if(product.type === ProductType.CLOTHING) {
-      gtmAnalytics.track("click_remove_cart_clothing");
-    }
-
-    mixpanel.track("product_removed_cart", {
-      productId: product.id,
-      name: product.name,
-      price: product.price,
-      productType: product.type
-    });
   };
 
   return (
