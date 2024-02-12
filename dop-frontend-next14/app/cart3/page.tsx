@@ -1,27 +1,23 @@
 'use client';
 
 import "reflect-metadata";
-import { Product, ProductType } from "@/app/product/Product";
+import { Product } from "@/app/product/Product";
 import React, { useState } from "react";
 import Link from "next/link";
 import { container } from "tsyringe";
 import { CartProbe } from "@/app/cart3/probe/CartProbe";
-import { requestRemove } from "@/app/utils/requestRemove";
+import { httpClient } from "@/app/utils/HttpClient";
 
 export default function CartPage3() {
   const probe = container.resolve(CartProbe);
 
-  // 장바구니 상태
-  const [cart, setCart] = useState<Product[]>([
-    Product.of('1', 'Product 1', 10, ProductType.BOOK),
-    Product.of('2', 'Product 2', 20, ProductType.FOOD),
-  ]);
+  const [cart, setCart] = useState<Product[]>(httpClient.getProducts);
 
   const removeFromCart = async (product: Product) => {
     probe.applyingRemove(product);
 
     try {
-      await requestRemove(product.id);
+      httpClient.removeProduct(product.id);
       setCart(cart.filter(p => p.id !== product.id));
       probe.remove(product);
     } catch (e) {

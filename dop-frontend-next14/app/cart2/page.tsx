@@ -6,8 +6,8 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { gtmAnalytics } from "@/app/utils/GtmAnalytics";
 import mixpanel from "mixpanel-browser";
-import { requestRemove } from "@/app/utils/requestRemove";
 import { logger } from "@/app/utils/Logger";
+import { httpClient } from "@/app/utils/HttpClient";
 
 function applyingRemove(product: Product) {
   mixpanel.track("product_apply_remove_cart", {
@@ -18,10 +18,6 @@ function applyingRemove(product: Product) {
 function sendRemoveMetric(product: Product) {
   if (product.type === ProductType.FOOD) {
     gtmAnalytics.track("click_remove_cart_food");
-  } else if (product.type === ProductType.BOOK) {
-    gtmAnalytics.track("click_remove_cart_book");
-  } else if (product.type === ProductType.CLOTHING) {
-    gtmAnalytics.track("click_remove_cart_clothing");
   }
 
   mixpanel.track("product_removed_cart", {
@@ -40,17 +36,12 @@ function sendRemoveFailure(product: Product) {
 }
 
 export default function CartPage() {
-
-  // 장바구니 상태
-  const [cart, setCart] = useState<Product[]>([
-    Product.of('1', 'Product 1', 10, ProductType.BOOK),
-    Product.of('2', 'Product 2', 20, ProductType.FOOD),
-  ]);
+  const [cart, setCart] = useState<Product[]>(httpClient.getProducts);
 
   const removeFromCart = async (product: Product) => {
     applyingRemove(product);
     try {
-      await requestRemove(product.id);
+      httpClient.removeProduct(product.id);
       setCart(cart.filter(p => p.id !== product.id));
       sendRemoveMetric(product);
     } catch (e) {

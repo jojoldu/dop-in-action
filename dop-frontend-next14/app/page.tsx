@@ -5,17 +5,15 @@ import { mixpanel } from "@/app/utils/Mixpanel";
 import { Product, ProductType } from "@/app/product/Product";
 import Link from "next/link";
 import React from "react";
-import { hasProduct } from "@/app/utils/HttpClient";
-import { useCart } from "@/app/product/CartContext";
+import { httpClient } from "@/app/utils/HttpClient";
 
 interface AddToCartButtonProps {
   product: Product;
 }
 
 function AddToCartButton({ product }: Readonly<AddToCartButtonProps>) {
-  const { addToCart } = useCart();
   const handleAddToCart = async () => {
-    if(await hasProduct(product.id)) {
+    if(httpClient.hasProduct(product.id)) {
       mixpanel.track("product_duplicate_added_to_cart", {
         productId: product.id,
       });
@@ -30,7 +28,7 @@ function AddToCartButton({ product }: Readonly<AddToCartButtonProps>) {
     });
     alert(`${product.name} 상품을 담았습니다.`);
 
-    addToCart(product);
+    httpClient.addProduct(product);
   };
 
   return <button onClick={handleAddToCart}>상품 담기</button>;
