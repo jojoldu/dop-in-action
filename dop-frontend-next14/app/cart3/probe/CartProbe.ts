@@ -26,10 +26,6 @@ export class CartProbe {
   public remove(product: Product): void {
     if(product.type === ProductType.FOOD) {
       this.gtmAnalytics.track("click_remove_cart_food");
-    } else if(product.type === ProductType.BOOK) {
-      this.gtmAnalytics.track("click_remove_cart_book");
-    } else if(product.type === ProductType.CLOTHING) {
-      this.gtmAnalytics.track("click_remove_cart_clothing");
     }
 
     this.mixpanel.track("product_removed_cart", {
@@ -41,7 +37,7 @@ export class CartProbe {
   }
 
   public removeFailure(product: Product) {
-    logger.error(`카트 상품 제거 실패 productId=${product.id}`);
+    logger.error(`Remove Cart Exception: productId=${product.id}`);
     mixpanel.track("product_removed_cart_failure", {
       productId: product.id
     });

@@ -27,8 +27,8 @@ export default function CartPage3() {
 
   return (
     <div>
-      <h1>장바구니</h1>
-      <Link href="/">Home 돌아가기</Link>
+      <h1>Cart Page</h1>
+      <Link href="/">Home</Link>
       <ul>
         {cart.map(product => (
           <li key={product.id}>

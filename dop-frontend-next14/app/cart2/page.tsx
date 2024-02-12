@@ -29,7 +29,7 @@ function sendRemoveMetric(product: Product) {
 }
 
 function sendRemoveFailure(product: Product) {
-  logger.error(`카트 상품 제거 실패 productId=${product.id}`);
+  logger.error(`Remove Cart Exception: productId=${product.id}`);
   mixpanel.track("product_removed_cart_failure", {
     productId: product.id
   });
@@ -51,8 +51,8 @@ export default function CartPage() {
 
   return (
     <div>
-      <h1>장바구니</h1>
-      <Link href="/">Home 돌아가기</Link>
+      <h1>Cart Page</h1>
+      <Link href="/">Home</Link>
       <ul>
         {cart.map(product => (
           <li key={product.id}>
