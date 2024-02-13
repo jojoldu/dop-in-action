@@ -1,9 +1,8 @@
 import { singleton } from "tsyringe";
-import { logger, Logger } from "@/app/utils/Logger";
+import { Logger } from "@/app/utils/Logger";
 import { Product, ProductType } from "@/app/product/Product";
 import { Mixpanel } from "@/app/utils/Mixpanel";
 import { GtmAnalytics } from "@/app/utils/GtmAnalytics";
-import mixpanel from "mixpanel-browser";
 
 @singleton()
 export class CartProbe {
@@ -18,7 +17,7 @@ export class CartProbe {
   }
 
   public applyingRemove(product: Product) {
-    mixpanel.track("product_apply_remove_cart", {
+    this.mixpanel.track("product_apply_remove_cart", {
       productId: product.id
     });
   }
@@ -37,8 +36,8 @@ export class CartProbe {
   }
 
   public removeFailure(product: Product) {
-    logger.error(`Remove Cart Exception: productId=${product.id}`);
-    mixpanel.track("product_removed_cart_failure", {
+    this.logger.error(`Remove Cart Exception: productId=${product.id}`);
+    this.mixpanel.track("product_removed_cart_failure", {
       productId: product.id
     });
   }
