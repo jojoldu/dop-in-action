@@ -86,11 +86,11 @@ export default function CartPage() {
 즉, 주요 로직인 비즈니스 로직과 렌더링 코드보다 부가적인 코드인 지표 전송, 로깅의 코드가 훨씬 더 많다.  
 지표와 관련된 로직만 따로 분리할 수 있다면, 비즈니스 로직과 렌더링 코드에만 집중할 수 있다.  
   
-
+이들을 분리해보자.  
 
 ## 리팩토링 1
 
-첫번째 리팩토링은 각 지표 전송 코드를 함수로 분리하는 것이다.
+첫번째 리팩토링은 각 지표 전송 코드를 각각의 함수로 분리하는 것이다.
 
 ```tsx
 function applyingRemove(product: Product) {
@@ -99,7 +99,7 @@ function applyingRemove(product: Product) {
   });
 }
 
-function sendRemoveMetric(product: Product) {
+function sendRemovedMetric(product: Product) {
   if (product.type === ProductType.FOOD) {
     gtmAnalytics.track("click_remove_cart_food");
   }
@@ -127,7 +127,7 @@ export default function CartPage() {
     try {
       httpClient.removeProduct(product.id);
       setCart(cart.filter(p => p.id !== product.id));
-      sendRemoveMetric(product);
+      sendRemovedMetric(product);
     } catch (e) {
       sendRemoveFailure(product);
     }

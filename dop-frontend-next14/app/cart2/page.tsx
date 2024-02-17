@@ -15,7 +15,7 @@ function applyingRemove(product: Product) {
   });
 }
 
-function sendRemoveMetric(product: Product) {
+function sendRemovedMetric(product: Product) {
   if (product.type === ProductType.FOOD) {
     gtmAnalytics.track("click_remove_cart_food");
   }
@@ -43,7 +43,7 @@ export default function CartPage() {
     try {
       httpClient.removeProduct(product.id);
       setCart(cart.filter(p => p.id !== product.id));
-      sendRemoveMetric(product);
+      sendRemovedMetric(product);
     } catch (e) {
       sendRemoveFailure(product);
     }
