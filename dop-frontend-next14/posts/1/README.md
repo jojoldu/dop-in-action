@@ -15,7 +15,7 @@
 > 모든 코드는 [Github](https://github.com/jojoldu/dop-in-action/tree/master/dop-frontend-next14)에 있다.
 
 
-```ts
+```tsx
 export default function CartPage() {
   const [cart, setCart] = useState<Product[]>(httpClient.getProducts);
 
@@ -49,23 +49,25 @@ export default function CartPage() {
   return (
     <div>
       <h1>Cart Page</h1>
-  <Link href="/">Home</Link>
-    <ul>
-    {cart.map(product => (
-        <li key={product.id}>
-        {product.name} - ${product.price} |
-        <button onClick={() => removeFromCart(product)}>Remove</button>
-  </li>
-))}
-  </ul>
-  </div>
-);
+      <Link href="/">Home</Link>
+      <ul>
+        {cart.map(product => (
+          <li key={product.id}>
+            {product.name} - ${product.price} |
+            <button onClick={() => removeFromCart(product)}>Remove</button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 }
 ```
-## 해결 1
 
-```ts
+## 리팩토링 1
 
+첫번째 리팩토링은 각 지표 전송 코드를 함수로 분리하는 것이다.
+
+```tsx
 function applyingRemove(product: Product) {
   mixpanel.track("product_apply_remove_cart", {
     productId: product.id
@@ -109,23 +111,27 @@ export default function CartPage() {
   return (
     <div>
       <h1>Cart Page</h1>
-  <Link href="/">Home</Link>
-    <ul>
-    {cart.map(product => (
-        <li key={product.id}>
-        {product.name} - ${product.price} |
-        <button onClick={() => removeFromCart(product)}>Remove</button>
-  </li>
-))}
-  </ul>
-  </div>
-);
+      <Link href="/">Home</Link>
+      <ul>
+        {cart.map(product => (
+          <li key={product.id}>
+            {product.name} - ${product.price} |
+            <button onClick={() => removeFromCart(product)}>Remove</button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 }
 ```
 
-## 해결 2
+가장 중요한 것은 "**지표 전송 코드가 과연 CartPage의 책임인가**" 인 것이다.  
+지표 전송 코드는 CartPage 비즈니스 로직과는 아무런 관련이 없다.  
 
-```ts
+
+## 리팩토링 2
+
+```tsx
 export default function CartPage3() {
   const probe = container.resolve(CartProbe);
 
@@ -146,17 +152,17 @@ export default function CartPage3() {
   return (
     <div>
       <h1>Cart Page</h1>
-  <Link href="/">Home</Link>
-    <ul>
-    {cart.map(product => (
-        <li key={product.id}>
-        {product.name} - ${product.price} |
-        <button onClick={() => removeFromCart(product)}>Remove</button>
-  </li>
-))}
-  </ul>
-  </div>
-);
+      <Link href="/">Home</Link>
+      <ul>
+        {cart.map(product => (
+          <li key={product.id}>
+            {product.name} - ${product.price} |
+            <button onClick={() => removeFromCart(product)}>Remove</button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 }
 ```
 
