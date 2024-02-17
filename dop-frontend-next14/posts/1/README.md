@@ -10,9 +10,20 @@
 
 이번 글에서는 이러한 혼란을 정리하고 깔끔하고 테스트 가능한 방식으로 비즈니스 관련된 지표를 전달하는 방법을 소개한다.
 
+> 이 글은 [Pete Hodgson](https://blog.thepete.net/about/)가 [martinfowler 블로그에 기재한 글](https://martinfowler.com/articles/domain-oriented-observability.html)을 많이 참고했다.   
+
 ## 문제
 
 > 모든 코드는 [Github](https://github.com/jojoldu/dop-in-action/tree/master/dop-frontend-next14)에 있다.
+
+예를 들어 다음과 같이 My 장바구니 페이지가 있다고 가정해보자.
+
+- (메인 비즈니스) My 장바구니에 담긴 상품을 제거할 수 있다.
+- My 장바구니에 담긴 상품을 **삭제를 시도하면 Mixpanel에 지표를 전송**해야 한다.
+- My 장바구니에서 **삭제한 상품이 음식일 경우에는 GTM에 지표를 전송**해야 한다.
+- My 장바구니에서 **삭제가 성공하면 Mixpanel에 지표를 전송**해야 한다.
+- My 장바구니에 담긴 상품을 삭제하는 도중에 오류가 발생하면 로그를 남겨야 한다.
+- My 장바구니에 담긴 상품을 삭제하는 도중에 오류가 발생하면 Mixpanel에 별도의 지표를 전송해야 한다.
 
 
 ```tsx
@@ -62,6 +73,20 @@ export default function CartPage() {
   );
 }
 ```
+
+이 CartPage에서 **비즈니스 로직은 과연 무엇일까**에 대해 생각해보자.  
+50라인의 코드 중에서 비즈니스 로직은 **단 2줄이다**.
+
+- `httpClient.removeProduct(product.id);`
+- `setCart(cart.filter(p => p.id !== product.id));`
+
+이 중 14라인은 뷰 코드이다.  
+나머지 라인은 **지표 전송, 로깅 코드**이다.  
+  
+즉, 주요 로직인 비즈니스 로직과 렌더링 코드보다 부가적인 코드인 지표 전송, 로깅의 코드가 훨씬 더 많다.  
+지표와 관련된 로직만 따로 분리할 수 있다면, 비즈니스 로직과 렌더링 코드에만 집중할 수 있다.  
+  
+
 
 ## 리팩토링 1
 
@@ -127,6 +152,7 @@ export default function CartPage() {
 
 가장 중요한 것은 "**지표 전송 코드가 과연 CartPage의 책임인가**" 인 것이다.  
 지표 전송 코드는 CartPage 비즈니스 로직과는 아무런 관련이 없다.  
+
 
 
 ## 리팩토링 2
