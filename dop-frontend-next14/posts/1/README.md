@@ -90,7 +90,7 @@ export default function CartPage() {
 
 ## 리팩토링 1
 
-첫번째 리팩토링은 각 지표 전송 코드를 각각의 함수로 분리하는 것이다.
+첫번째 리팩토링은 각 지표 전송 코드를 **각각의 함수로 추출**하는 것이다.
 
 ```tsx
 function applyingRemove(product: Product) {
@@ -123,13 +123,13 @@ export default function CartPage() {
   const [cart, setCart] = useState<Product[]>(httpClient.getProducts);
 
   const removeFromCart = async (product: Product) => {
-    applyingRemove(product);
+    applyingRemove(product); // (1)
     try {
       httpClient.removeProduct(product.id);
       setCart(cart.filter(p => p.id !== product.id));
-      sendRemovedMetric(product);
+      sendRemovedMetric(product); // (2)
     } catch (e) {
-      sendRemoveFailure(product);
+      sendRemoveFailure(product); // (3)
     }
   };
 
@@ -150,10 +150,33 @@ export default function CartPage() {
 }
 ```
 
+총 3개의 함수로 분리했다.
+
+- (1) `applyingRemove(product);`
+- (2) `sendRemovedMetric(product);`
+- (3) `sendRemoveFailure(product);`
+
+
 가장 중요한 것은 "**지표 전송 코드가 과연 CartPage의 책임인가**" 인 것이다.  
 지표 전송 코드는 CartPage 비즈니스 로직과는 아무런 관련이 없다.  
 
 
+새로운 구현은 원래 구현과 비교할 때 몇 가지 이점이 있습니다.
+
+계측 문제를 특정 위치로 그룹화합니다.
+InventoryProbe에는 인벤토리 요구 사항에 필요한 모든 계측 관련 코드가 포함되어 있습니다. 따라서 계측된 항목이 무엇인지 알아야 하는 경우 구체적으로 해당 지점으로 이동할 수 있습니다.
+
+계측 변경을 보다 쉽게 변경할 수 있습니다.
+특정 로그나 지표를 계측하는 방법을 변경해야 하는 경우 잠재적으로 비즈니스 코드를 변경하지 않고도 한 곳에서 수행할 수 있습니다.
+
+명시적인 의도
+Inventory::reserve 예제에서 모든 계측 호출은 비즈니스 개념에 따라 이름이 지정되므로 관심 있는 측면을 더 쉽게 따라갈 수 있습니다.
+
+인지 부하 감소
+개발자로서 더 이상 사용된 KPI 이름/키, 예상되는 컨텍스트 유형, 사용할 관련 메시지 등 로거 및 측정항목의 세부 사항을 알 필요가 없습니다.
+
+비업무용 코드 감소
+이 인위적인 예에서도 예상되는 관찰 가능성 목표를 달성하기 위해 Inventory 클래스에 더 적은 코드를 작성할 수 있었습니다.
 
 ## 리팩토링 2
 
@@ -191,6 +214,12 @@ export default function CartPage3() {
   );
 }
 ```
+
+여기서 logger 까지도 과연 probe 대상으로 둬야하는 것인가에 대해서는 이견의 여지가 있다.  
+이유는 애플리케이션에 **로그를 추가하는 것이 더 불편해지기 떄문**이다.  
+catch 로직에서 정상적인 로깅이 되어있는지 직관적으로 알 수 없으며, 혹시나 놓치는 로깅이 발생할 수도 있다.  
+
+그래서 logger는 probe 대상에서 제외하고 지표 전송만을 포함하는 것도 좋은 방법이다.  
 
 
 
