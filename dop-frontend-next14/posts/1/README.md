@@ -12,7 +12,7 @@
 
 > 이 글은 [Pete Hodgson](https://blog.thepete.net/about/)가 [martinfowler 블로그에 기재한 글](https://martinfowler.com/articles/domain-oriented-observability.html)을 많이 참고했다.   
 
-## 문제
+## 1. 문제
 
 > 모든 코드는 [Github](https://github.com/jojoldu/dop-in-action/tree/master/dop-frontend-next14)에 있다.
 
@@ -88,7 +88,7 @@ export default function CartPage() {
   
 이들을 분리해보자.  
 
-## 리팩토링 1
+## 2. 리팩토링 - 함수 추출
 
 첫번째 리팩토링은 각 지표 전송 코드를 **각각의 함수로 추출**하는 것이다.
 
@@ -170,7 +170,7 @@ export default function CartPage() {
 다만 그럼에도 몇가지 단점이 있다.
 
 - 테스트 코드 작성이 어렵고 복잡하다.
-  - 내부에서 직접 호출하는 함수는 항상 Mocking이 필요하다. 
+  - 순수하지 않은 함수 (외부에 의존하는 함수)를 직접 호출하는 코드는 항상 Mocking이 필요하다. 
   - 이는 상태 검증을 하기가 어렵다는 것이며 행위 검증으로 검증 방법이 제한됨을 의미하기도 한다.
 - CartPage는 여전히 복잡하다.
   - 지표 전송 로직은 CartPage의 책임이 아니다.
@@ -179,7 +179,11 @@ export default function CartPage() {
 
 리팩토링 1의 장점은 가져가면서 단점은 해결한 방법을 적용해보자.
 
-## 리팩토링 2
+## 3. 리팩토링 - 의존성 주입과 컨테이너
+
+두번째 리팩토링은 의존성 주입 컨테이너와 Probe 객체를 활용하는 것이다.  
+
+
 
 ```tsx
 export default function CartPage3() {
@@ -234,6 +238,104 @@ catch 로직에서 정상적인 로깅이 되어있는지 직관적으로 알 �
 
 그래서 logger는 probe 대상에서 제외하고 지표 전송만을 포함하는 것도 좋은 방법이다.  
 
+> 테스트 용이성에 대해서는 다음 글에서 소개할 예정이다.
 
 
+### 3-1. Context API와 Hooks 로 리팩토링 한다면?
+
+위 코드를 의존성 컨테이너가 아닌 Context API와 Hooks로 개선해본다면 어떨까?
+
+Context API와 Hooks를 활용해서 코드를 작성해보면 다음과 같다.
+
+```tsx
+// CartProbeContext.tsx
+
+interface CartProbe {
+  applyingRemove: (product: Product) => void;
+  remove: (product: Product) => void;
+  removeFailure: (product: Product) => void;
+}
+
+const defaultProbe: CartProbe = {
+  applyingRemove: (product: Product) => {},
+  remove: (product: Product) => {},
+  removeFailure: (product: Product) => {},
+};
+
+const CartProbeContext = createContext<CartProbe>(defaultProbe);
+
+export const CartProbeProvider: React.FC = ({ children }) => {
+  const probe = {
+    applyingRemove: (product: Product) => {
+      ...
+    },
+    remove: (product: Product) => {
+      ...
+    },
+    removeFailure: (product: Product) => {
+      ...
+    },
+  };
+
+  return <CartProbeContext.Provider value={probe}>{children}</CartProbeContext.Provider>;
+};
+
+export const useCartProbe = () => useContext(CartProbeContext);
+```
+
+작성된 코드를 활용해서 CartPage를 리팩토링하면 다음과 같다.
+
+```tsx
+// CartPage4.tsx
+export default function CartPage4() {
+  const { applyingRemove, remove, removeFailure } = useCartProbe();
+  const [cart, setCart] = useState<Product[]>(httpClient.getProducts);
+
+  const removeFromCart = async (product: Product) => {
+    applyingRemove(product);
+
+    try {
+      httpClient.removeProduct(product.id);
+      setCart(cart.filter(p => p.id !== product.id));
+      remove(product);
+    } catch (e) {
+      removeFailure(product);
+    }
+  };
+
+  return (
+    <div>
+      <h1>Cart Page</h1>
+      <Link href="/">Home</Link>
+      <ul>
+        {cart.map(product => (
+                <li key={product.id}>
+                  {product.name} - ${product.price} |
+                  <button onClick={() => removeFromCart(product)}>Remove</button>
+                </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+Context API와 Hooks를 통한 리팩토링은 다음과 같은 장점을 얻는다.
+
+- React 생태계 일관성 
+  - React의 기본 기능을 사용하여 구현되므로, React 생태계와의 일관성 유지 
+- 간소화된 의존성 관리
+  - Context API를 사용하여 애플리케이션 전반에 걸쳐 의존성을 쉽게 공유
+- 낮은 러닝 커브
+  - 별도의 의존성 라이브러리를 배울 필요가 없고 프로젝트 전반의 설정이 필요없다.
+
+다만, 의존성 컨테이너의 사용 방법보다 단점은 다음과 같다.
+
+- 목적에 맞지 않는 Context 오용
+  - Context 는 주로 상태 관리에 사용되는데 지금의 기능은 **상태가 전혀 없고 행위 (함수) 관리가 필요한 상황**이다.
+  - Context를 통해 상태와 행위가 모두 관리 받는 상황이라 프로젝트가 커질수록 오용될 가능성이 높다.
+- 성능 이슈
+  - 이번과 같이 자주 사용되는 함수의 집합체는 많은 컴포넌트가 사용할 확률이 높으며 하나의 컨텍스트를 많은 컴포넌트가 사용한다면 성능 이슈가 발생할 수 있다.
+
+## 결론
 
