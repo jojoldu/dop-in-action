@@ -9,7 +9,7 @@ import mixpanel from "mixpanel-browser";
 import { logger } from "@/app/utils/Logger";
 import { httpClient } from "@/app/utils/HttpClient";
 
-function applyingRemove(product: Product) {
+function sendApplyingRemoveMetric(product: Product) {
   mixpanel.track("product_apply_remove_cart", {
     productId: product.id
   });
@@ -28,7 +28,7 @@ function sendRemovedMetric(product: Product) {
   });
 }
 
-function sendRemoveFailure(product: Product) {
+function sendRemoveFailureMetric(product: Product) {
   logger.error(`Remove Cart Exception: productId=${product.id}`);
   mixpanel.track("product_removed_cart_failure", {
     productId: product.id
@@ -39,13 +39,13 @@ export default function CartPage() {
   const [cart, setCart] = useState<Product[]>(httpClient.getProducts);
 
   const removeFromCart = async (product: Product) => {
-    applyingRemove(product);
+    sendApplyingRemoveMetric(product);
     try {
       httpClient.removeProduct(product.id);
       setCart(cart.filter(p => p.id !== product.id));
       sendRemovedMetric(product);
     } catch (e) {
-      sendRemoveFailure(product);
+      sendRemoveFailureMetric(product);
     }
   };
 

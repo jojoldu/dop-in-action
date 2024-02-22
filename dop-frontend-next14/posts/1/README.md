@@ -93,7 +93,7 @@ export default function CartPage() {
 첫번째 리팩토링은 각 지표 전송 코드를 **각각의 함수로 추출**하는 것이다.
 
 ```tsx
-function applyingRemove(product: Product) {
+function sendApplyingRemoveMetric(product: Product) {
   mixpanel.track("product_apply_remove_cart", {
     productId: product.id
   });
@@ -112,7 +112,7 @@ function sendRemovedMetric(product: Product) {
   });
 }
 
-function sendRemoveFailure(product: Product) {
+function sendRemoveFailureMetric(product: Product) {
   logger.error(`Remove Cart Exception: productId=${product.id}`);
   mixpanel.track("product_removed_cart_failure", {
     productId: product.id
@@ -123,38 +123,38 @@ export default function CartPage() {
   const [cart, setCart] = useState<Product[]>(httpClient.getProducts);
 
   const removeFromCart = async (product: Product) => {
-    applyingRemove(product); // (1)
+    sendApplyingRemoveMetric(product);
     try {
       httpClient.removeProduct(product.id);
       setCart(cart.filter(p => p.id !== product.id));
-      sendRemovedMetric(product); // (2)
+      sendRemovedMetric(product);
     } catch (e) {
-      sendRemoveFailure(product); // (3)
+      sendRemoveFailureMetric(product);
     }
   };
 
   return (
-    <div>
-      <h1>Cart Page</h1>
-      <Link href="/">Home</Link>
-      <ul>
-        {cart.map(product => (
-          <li key={product.id}>
-            {product.name} - ${product.price} |
-            <button onClick={() => removeFromCart(product)}>Remove</button>
-          </li>
-        ))}
-      </ul>
-    </div>
+          <div>
+            <h1>Cart Page</h1>
+            <Link href="/">Home</Link>
+            <ul>
+              {cart.map(product => (
+                      <li key={product.id}>
+                        {product.name} - ${product.price} |
+                        <button onClick={() => removeFromCart(product)}>Remove</button>
+                      </li>
+              ))}
+            </ul>
+          </div>
   );
 }
 ```
 
 총 3개의 함수로 분리했다.
 
-- (1) `applyingRemove(product);`
+- (1) `sendApplyingRemoveMetric(product);`
 - (2) `sendRemovedMetric(product);`
-- (3) `sendRemoveFailure(product);`
+- (3) `sendRemoveFailureMetric(product);`
 
 이렇게 리팩토링한 코드의 장점은 다음과 같다.
 
@@ -178,6 +178,8 @@ export default function CartPage() {
   - CartPage가 가져야할 비공개 함수들은 **CartPage의 비즈니스 로직들을 담고 있는 함수**들이어야 한다.
 
 리팩토링 1의 장점은 가져가면서 단점은 해결한 방법을 적용해보자.
+
+> jest를 통한 Module Mocking이 있는데 왜 테스트가 어려운지는 다음 글에서 이야기한다.
 
 ## 3. 리팩토링 - 의존성 주입
 
@@ -232,7 +234,8 @@ export default function CartPage3() {
 }
 ```
 
-새로운 구현은 원래 구현과 비교할 때 몇 가지 이점이 있다.
+- 계측 객체로 그룹 
+
 
 - 계측 문제를 특정 위치로 그룹화한다.
   - InventoryProbe에는 인벤토리 요구 사항에 필요한 모든 계측 관련 코드가 포함되어 있다.  
@@ -247,7 +250,6 @@ catch 로직에서 정상적인 로깅이 되어있는지 직관적으로 알 �
 
 그래서 logger는 probe 대상에서 제외하고 지표 전송만을 포함하는 것도 좋은 방법이다.  
 
-> 테스트 용이성에 대해서는 다음 글에서 소개할 예정이다.
 
 
 ### 3-2. 3-1. 의존성 주입 - Context API & Hooks
