@@ -1,4 +1,4 @@
-# 프론트엔드 환경에서의 Domain Oriented Observability
+# 1. 프론트엔드 환경에서의 Domain Oriented Observability - 
 
 프론트엔드 개발을 하다보면 각종 지표를 보내야 하는 일이 많다.  
 대표적으로 GTM (Google Tag Manager), Mixpanel 등의 마케팅 도구들을 활용한 지표 전달이다.  
@@ -11,6 +11,7 @@
 이번 글에서는 이러한 혼란을 정리하고 깔끔하고 테스트 가능한 방식으로 비즈니스 관련된 지표를 전달하는 방법을 소개한다.
 
 > 이 글은 [Pete Hodgson](https://blog.thepete.net/about/)가 [martinfowler 블로그에 기재한 글](https://martinfowler.com/articles/domain-oriented-observability.html)을 많이 참고했다.   
+> (martinfowler가 쓴 글은 아니다)
 
 ## 1. 문제
 
@@ -74,17 +75,19 @@ export default function CartPage() {
 }
 ```
 
-이 CartPage에서 **비즈니스 로직은 과연 무엇일까**에 대해 생각해보자.  
-50라인의 코드 중에서 비즈니스 로직은 **단 2줄이다**.
+이 CartPage에서 **비즈니스 로직은 과연 무엇일까**?    
+살펴보면 아래 2개이다.  
 
 - `httpClient.removeProduct(product.id);`
 - `setCart(cart.filter(p => p.id !== product.id));`
 
+50라인의 코드 중에서 비즈니스 로직은 **단 2줄이다**.
 이 중 14라인은 뷰 코드이다.  
 나머지 라인은 **지표 전송, 로깅 코드**이다.  
   
-즉, 주요 로직인 비즈니스 로직과 렌더링 코드보다 부가적인 코드인 지표 전송, 로깅의 코드가 훨씬 더 많다.  
-지표와 관련된 로직만 따로 분리할 수 있다면, 비즈니스 로직과 렌더링 코드에만 집중할 수 있다.  
+즉, 주요 로직인 비즈니스 로직과 렌더링 코드보다 **부가적인 코드인 지표 전송, 로깅의 코드가 훨씬 더 많다**.  
+이로 인해 실제로 중요하게 다루고 분석해야할 로직에 집중하기 어려운 코드가 되었다.  
+지표와 관련된 로직만 따로 분리할 수 있다면, 메인 로직 (비즈니스와 렌더링) 코드에만 집중할 수 있다.  
   
 이들을 분리해보자.  
 
@@ -152,15 +155,16 @@ export default function CartPage() {
 
 총 3개의 함수로 분리했다.
 
-- (1) `sendApplyingRemoveMetric(product);`
-- (2) `sendRemovedMetric(product);`
-- (3) `sendRemoveFailureMetric(product);`
+- (1) `sendApplyingRemoveMetric`
+- (2) `sendRemovedMetric`
+- (3) `sendRemoveFailureMetric`
 
 이렇게 리팩토링한 코드의 장점은 다음과 같다.
 
-- 인지 부하 감소
-  - 비즈니스 로직이 아닌 지표 전송 코드의 세부 구현을 굳이 신경쓰지 않아도 된다.
-  - 그건 해당 함수 내부에서 처리해야할 일이 되었다.
+- 적절한 추상화 계층으로 인한 인지 부하 감소
+  - 지표 전송 코드를 함수로 추출함으로써 지표 전송 코드를 추상화할 수 있게 되었다.
+  - Mixpanel 로 보내던 지표를 Amplitude 와 같은 다른 트래킹 도구로 전송한다고 해서 메인 비즈니스 로직을 수정할 필요가 없다.
+  - 해당 함수 내부에서 처리할 일이 되었다.
 - 코드 수정이 쉬워졌다.
   - 특정 로그나 지표를 전송하는 방법을 변경해야 하는 경우 비즈니스 코드를 신경 쓰지 않고 특정 함수만 수정하면 된다.
 - 명시적인 의도
