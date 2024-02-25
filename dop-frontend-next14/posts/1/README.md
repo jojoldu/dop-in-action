@@ -205,67 +205,15 @@ JavaScript 테스트 생태계 (Jest) 만의 특이점으로 직접 호출한 �
 
 이는 크게 2가지로 구현 가능하다
 
-- 의존성 컨테이너를 활용한 방법
+- Props를 활용한 방법
 - Context API와 Hooks를 활용한 방법
-
-### 3-1. 의존성 주입 - 의존성 컨테이너
-
-의존성 주입 컨테이너와 **관측 전용 객체** (Probe) 를 활용해서 리팩토링 하면 다음과 같다.   
-
-```tsx
-export default function CartPage3() {
-  const probe = container.resolve(CartProbe);
-
-  const [cart, setCart] = useState<Product[]>(httpClient.getProducts);
-
-  const removeFromCart = async (product: Product) => {
-    probe.applyingRemove(product);
-
-    try {
-      httpClient.removeProduct(product.id);
-      setCart(cart.filter(p => p.id !== product.id));
-      probe.remove(product);
-    } catch (e) {
-      probe.removeFailure(product);
-    }
-  };
-
-  return (
-    <div>
-      <h1>Cart Page</h1>
-      <Link href="/">Home</Link>
-      <ul>
-        {cart.map(product => (
-          <li key={product.id}>
-            {product.name} - ${product.price} |
-            <button onClick={() => removeFromCart(product)}>Remove</button>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-```
-
-- 계측 객체로 그룹 
+- 의존성 컨테이너를 활용한 방법
 
 
-- 계측 문제를 특정 위치로 그룹화한다.
-  - InventoryProbe에는 인벤토리 요구 사항에 필요한 모든 계측 관련 코드가 포함되어 있다.  
-  - 따라서 계측된 항목이 무엇인지 알아야 하는 경우 구체적으로 해당 지점으로 이동할 수 있다.
-
-- 비업무용 코드 감소
-  - 이 인위적인 예에서도 예상되는 관찰 가능성 목표를 달성하기 위해 Inventory 클래스에 더 적은 코드를 작성할 수 있다.
-
-여기서 logger 까지도 과연 probe 대상으로 둬야하는 것인가에 대해서는 이견의 여지가 있다.  
-이유는 애플리케이션에 **로그를 추가하는 것이 더 불편해지기 떄문**이다.  
-catch 로직에서 정상적인 로깅이 되어있는지 직관적으로 알 수 없으며, 혹시나 놓치는 로깅이 발생할 수도 있다.  
-
-그래서 logger는 probe 대상에서 제외하고 지표 전송만을 포함하는 것도 좋은 방법이다.  
+### 3-1. 의존성 주입 - Props
 
 
-
-### 3-2. 3-1. 의존성 주입 - Context API & Hooks
+### 3-2. 의존성 주입 - Context API & Hooks
 
 위 코드를 의존성 컨테이너가 아닌 Context API와 Hooks로 개선해본다면 어떨까?
 
@@ -363,6 +311,102 @@ Context API와 Hooks를 통한 리팩토링은 다음과 같은 장점을 얻는
 
 특히 프로젝트의 규모가 점점 커질수록 (대규모 애플리케이션) 의존성 주입 컨테이너를 활용하는 것이 유리하다.  
 이러한 라이브러리는 의존성을 보다 체계적이고 구조화된 방식으로 관리하기 위한 다양한 기능과 유연성을 제공하기 때문이다.  
+
+### 3-3. 의존성 주입 - 의존성 컨테이너
+
+의존성 주입 컨테이너와 **관측 전용 객체** (Probe) 를 활용해서 리팩토링 하면 다음과 같다.
+
+```ts
+@singleton()
+export class CartProbe {
+  private readonly logger: Logger;
+  private readonly gtmAnalytics: GtmAnalytics;
+  private readonly mixpanel: Mixpanel;
+
+  constructor(logger: Logger, gtmAnalytics: GtmAnalytics, mixpanel: Mixpanel) {
+    this.logger = logger;
+    this.gtmAnalytics = gtmAnalytics;
+    this.mixpanel = mixpanel;
+  }
+
+  public applyingRemove(product: Product) {
+    this.mixpanel.track("product_apply_remove_cart", {
+      productId: product.id
+    });
+  }
+
+  public remove(product: Product): void {
+    if(product.type === ProductType.FOOD) {
+      this.gtmAnalytics.track("click_remove_cart_food");
+    }
+
+    this.mixpanel.track("product_removed_cart", {
+      productId: product.id,
+      name: product.name,
+      price: product.price,
+      productType: product.type
+    });
+  }
+
+  public removeFailure(product: Product) {
+    this.logger.error(`Remove Cart Exception: productId=${product.id}`);
+    this.mixpanel.track("product_removed_cart_failure", {
+      productId: product.id
+    });
+  }
+}
+```
+
+```tsx
+export default function CartPage3() {
+  const probe = container.resolve(CartProbe);
+
+  const [cart, setCart] = useState<Product[]>(httpClient.getProducts);
+
+  const removeFromCart = async (product: Product) => {
+    probe.applyingRemove(product);
+
+    try {
+      httpClient.removeProduct(product.id);
+      setCart(cart.filter(p => p.id !== product.id));
+      probe.remove(product);
+    } catch (e) {
+      probe.removeFailure(product);
+    }
+  };
+
+  return (
+    <div>
+      <h1>Cart Page</h1>
+      <Link href="/">Home</Link>
+      <ul>
+        {cart.map(product => (
+          <li key={product.id}>
+            {product.name} - ${product.price} |
+            <button onClick={() => removeFromCart(product)}>Remove</button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+- 계측 객체로 그룹
+
+
+- 계측 문제를 특정 위치로 그룹화한다.
+  - InventoryProbe에는 인벤토리 요구 사항에 필요한 모든 계측 관련 코드가 포함되어 있다.
+  - 따라서 계측된 항목이 무엇인지 알아야 하는 경우 구체적으로 해당 지점으로 이동할 수 있다.
+
+- 비업무용 코드 감소
+  - 이 인위적인 예에서도 예상되는 관찰 가능성 목표를 달성하기 위해 Inventory 클래스에 더 적은 코드를 작성할 수 있다.
+
+여기서 logger 까지도 과연 probe 대상으로 둬야하는 것인가에 대해서는 이견의 여지가 있다.  
+이유는 애플리케이션에 **로그를 추가하는 것이 더 불편해지기 떄문**이다.  
+catch 로직에서 정상적인 로깅이 되어있는지 직관적으로 알 수 없으며, 혹시나 놓치는 로깅이 발생할 수도 있다.
+
+그래서 logger는 probe 대상에서 제외하고 지표 전송만을 포함하는 것도 좋은 방법이다.
 
 ## 결론
 
