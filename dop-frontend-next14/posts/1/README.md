@@ -212,6 +212,25 @@ JavaScript 테스트 생태계 (Jest) 만의 특이점으로 직접 호출한 �
 
 ### 3-1. 의존성 주입 - Props
 
+```tsx
+export default function CartPage4({ probe }: CartPage4Props) {
+  const [cart, setCart] = useState<Product[]>(httpClient.getProducts);
+
+  const removeFromCart = async (product: Product) => {
+    probe.applyingRemove(product);
+
+    try {
+      httpClient.removeProduct(product.id);
+      setCart(cart.filter(p => p.id !== product.id));
+      probe.remove(product);
+    } catch (e) {
+      probe.removeFailure(product);
+    }
+  };
+
+  // JSX는 이전 예제와 동일하므로 생략
+}
+```
 
 ### 3-2. 의존성 주입 - Context API & Hooks
 
