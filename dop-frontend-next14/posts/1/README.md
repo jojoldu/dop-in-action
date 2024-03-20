@@ -221,11 +221,11 @@ interface CartProbe {
 ```
 
 ```tsx
-interface CartPage4Props {
+interface CartProbeProps {
   probe: CartProbe; // 의존성 주입을 위한 Props
 }
 
-export default function CartPage4({ probe }: CartPage4Props) {
+export default function CartPage({ probe }: CartProbeProps) {
   const [cart, setCart] = useState<Product[]>(httpClient.getProducts);
 
   const removeFromCart = async (product: Product) => {
@@ -313,7 +313,7 @@ export const useCartProbe = () => useContext(CartProbeContext);
 
 ```tsx
 // CartPage4.tsx
-export default function CartPage4() {
+export default function CartPage() {
   const { applyingRemove, remove, removeFailure } = useCartProbe();
   const [cart, setCart] = useState<Product[]>(httpClient.getProducts);
 
@@ -412,7 +412,7 @@ export class CartProbe {
 ```
 
 ```tsx
-export default function CartPage3() {
+export default function CartPage() {
   const probe = container.resolve(CartProbe);
 
   const [cart, setCart] = useState<Product[]>(httpClient.getProducts);

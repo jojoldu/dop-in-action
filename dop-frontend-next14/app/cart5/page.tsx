@@ -1,20 +1,16 @@
 'use client';
 
 import "reflect-metadata";
-import { Product, ProductType } from "@/app/product/Product";
+import { Product } from "@/app/product/Product";
 import React, { useState } from "react";
 import Link from "next/link";
-import { gtmAnalytics } from "@/app/utils/GtmAnalytics";
-import mixpanel from "mixpanel-browser";
-import { logger } from "@/app/utils/Logger";
-import { httpClient } from "@/app/utils/HttpClient";
+import { container } from "tsyringe";
 import { CartProbe } from "@/app/cart5/probe/CartProbe";
+import { httpClient } from "@/app/utils/HttpClient";
 
-interface CartProbeProps {
-  probe: CartProbe; // 의존성 주입을 위한 Props
-}
+export default function CartPage3() {
+  const probe = container.resolve(CartProbe);
 
-export default function CartPage({ probe }: CartProbeProps) {
   const [cart, setCart] = useState<Product[]>(httpClient.getProducts);
 
   const removeFromCart = async (product: Product) => {
@@ -28,6 +24,7 @@ export default function CartPage({ probe }: CartProbeProps) {
       probe.removeFailure(product);
     }
   };
+
   return (
     <div>
       <h1>Cart Page</h1>

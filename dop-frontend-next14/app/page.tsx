@@ -48,9 +48,11 @@ export default function Home() {
   return (
     <div>
       <h1>상품 목록</h1>
-      <Link href="/cart">장바구니 보기</Link> <br/>
-      <Link href="/cart2">(리팩토링1) 장바구니 보기</Link>
-      <Link href="/cart3">(리팩토링2) 장바구니 보기</Link>
+      <Link href="/cart">1. 장바구니 보기</Link> <br />
+      <Link href="/cart2">2. 장바구니 보기</Link> <br />
+      <Link href="/cart3">3. 장바구니 보기</Link> <br />
+      <Link href="/cart4">4. 장바구니 보기</Link> <br />
+      <Link href="/cart5">5. 장바구니 보기</Link> <br />
 
       <ul>
         {products.map(product => (
