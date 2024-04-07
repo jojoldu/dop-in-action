@@ -11,7 +11,7 @@ interface CartProbeProps {
   probe: CartProbe; // 의존성 주입을 위한 Props
 }
 
-export default function CartPage({ probe }) {
+export default function CartPage({ probe }: CartProbeProps) {
   const [cart, setCart] = useState<Product[]>(httpClient.getProducts);
 
   const removeFromCart = async (product: Product) => {

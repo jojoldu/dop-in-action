@@ -7,24 +7,22 @@ import Link from "next/link";
 import { httpClient } from "@/app/utils/HttpClient";
 import { CartProbe } from "@/app/cart5/probe/CartProbe";
 
-interface CartProbeProps {
-  probe: CartProbe; // 의존성 주입을 위한 Props
-}
-
-export default function CartPage({ probe }: CartProbeProps) {
+export default function CartPage() {
+  const { applyingRemove, remove, removeFailure } = useCartProbe();
   const [cart, setCart] = useState<Product[]>(httpClient.getProducts);
 
   const removeFromCart = async (product: Product) => {
-    probe.applyingRemove(product);
+    applyingRemove(product);
 
     try {
       httpClient.removeProduct(product.id);
       setCart(cart.filter(p => p.id !== product.id));
-      probe.remove(product);
+      remove(product);
     } catch (e) {
-      probe.removeFailure(product);
+      removeFailure(product);
     }
   };
+
   return (
     <div>
       <h1>Cart Page</h1>
