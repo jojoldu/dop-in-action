@@ -25,7 +25,6 @@
 - My 장바구니에 담긴 상품을 삭제하는 도중에 오류가 발생하면 로그를 남겨야 한다.
 - My 장바구니에 담긴 상품을 삭제하는 도중에 오류가 발생하면 Mixpanel에 별도의 지표를 전송해야 한다.
 
-
 ```tsx
 export default function CartPage() {
   const [cart, setCart] = useState<Product[]>(httpClient.getProducts);
@@ -39,7 +38,7 @@ export default function CartPage() {
       httpClient.removeProduct(product.id);
       setCart(cart.filter(p => p.id !== product.id));
 
-      if(product.type === ProductType.FOOD) {
+      if (product.type === ProductType.FOOD) {
         gtmAnalytics.track("click_remove_cart_food");
       }
 
@@ -58,18 +57,18 @@ export default function CartPage() {
   };
 
   return (
-    <div>
-      <h1>Cart Page</h1>
-      <Link href="/">Home</Link>
-      <ul>
-        {cart.map(product => (
-          <li key={product.id}>
-            {product.name} - ${product.price} |
-            <button onClick={() => removeFromCart(product)}>Remove</button>
-          </li>
-        ))}
-      </ul>
-    </div>
+          <div>
+            <h1>Cart Page</h1>
+            <Link href="/">Home</Link>
+            <ul>
+              {cart.map(product => (
+                      <li key={product.id}>
+                        {product.name} - ${product.price} |
+                        <button onClick={() => removeFromCart(product)}>Remove</button>
+                      </li>
+              ))}
+            </ul>
+          </div>
   );
 }
 ```
