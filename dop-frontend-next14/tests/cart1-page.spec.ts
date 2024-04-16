@@ -1,24 +1,25 @@
 import { render, fireEvent, waitFor } from '@testing-library/react';
-import CartPage from './CartPage';
-import * as hooks from './hooks';
-import * as services from './services';
+import CartPage from '../app/cart/page';
+import { GtmAnalytics } from "@/app/utils/GtmAnalytics";
 
-// httpClient 및 기타 서비스의 모의 구현
-jest.mock('./services', () => ({
-  httpClient: {
-    getProducts: jest.fn(),
-    removeProduct: jest.fn()
-  },
-  mixpanel: {
+jest.mock('./GtmAnalytics', () => ({
+  GtmAnalytics: jest.fn().mockImplementation(() => ({
     track: jest.fn()
-  },
-  gtmAnalytics: {
-    track: jest.fn()
-  },
-  logger: {
-    error: jest.fn()
-  }
+  })),
+  gtmAnalytics: new GtmAnalytics()
 }));
+
+jest.mock('./HttpClient', () => {
+  return {
+    HttpClient: jest.fn().mockImplementation(() => ({
+      myCart: new Map(),
+      getProducts: jest.fn().mockImplementation(() => Array.from(this.myCart.values())),
+      removeProduct: jest.fn().mockImplementation((productId) => this.myCart.delete(productId)),
+      addProduct: jest.fn().mockImplementation((product) => this.myCart.set(product.id, product))
+    })),
+    httpClient: new this.HttpClient()
+  };
+});
 
 describe('CartPage 컴포넌트', () => {
   it('상품 목록을 불러와 렌더링한다', async () => {
